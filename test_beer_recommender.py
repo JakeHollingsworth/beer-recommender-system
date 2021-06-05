@@ -6,7 +6,7 @@ class Test_Beer_Recommender(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pass
+        self.test_X = np.array([[2, None, 3],[5, 2, None],[3,3,1], [None, 2, 2]])
 
     @classmethod
     def tearDownClass(cls):

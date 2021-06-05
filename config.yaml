@@ -1,1 +1,13 @@
-x: 2
+data_url: 'http://jmcauley.ucsd.edu/cse255/data/beer/?fbclid=IwAR2bXZ-RF0pW4-9PIYofU4om7Una0E_DBYdD9foRsJwXJUjuUc1DNwlTSLQ'
+
+optimizer: 'Adam'
+
+learning_rate: .001
+
+regularization_lambda: .002
+
+N_nearest_items: 50
+
+epochs: 50
+
+batch_size: 128
