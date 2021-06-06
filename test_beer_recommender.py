@@ -47,7 +47,6 @@ class Test_Beer_Recommender(unittest.TestCase):
         pass
 
     def test_get_numpy_features(self):
-        train_validation_test_split_ratio = [0.7,0.1]
         converted_df = get_numpy_features(self._test_X_df)
         self.assertTrue(np.allclose(converted_df, self._test_X_np, equal_nan=True))
 
@@ -59,8 +58,15 @@ class Test_Beer_Recommender(unittest.TestCase):
     def test_train_validation_test_split_size(self):
         train_validation_test_split_ratio = [0.7,0.1]
         train_df, validation_df, test_df = train_validation_test_split(self._test_X_df,train_validation_test_split_ratio,random_state=4)
+        self.assertTrue(len(train_df) + len(validation_df) + len(test_df) == len(self._test_X_df))
+
+
+    def test_train_validation_test_split_duplicate(self):
+        train_validation_test_split_ratio = [0.7,0.1]
+        train_df, validation_df, test_df = train_validation_test_split(self._test_X_df,train_validation_test_split_ratio,random_state=4)
         df_diff = pd.concat([train_df,validation_df,test_df]).drop_duplicates(keep=False)
         self.assertTrue(len(df_diff) == len(self._test_X_df))
+
 
 
     def test_read_trained_model(self):
