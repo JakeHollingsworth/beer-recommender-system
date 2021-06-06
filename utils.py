@@ -3,6 +3,7 @@ import torch
 import pandas as pd
 import numpy as np
 
+
 def read_config():
     with open('config.yaml') as file:
         config_dict = yaml.load(file, Loader=yaml.FullLoader)
@@ -26,8 +27,11 @@ def get_numpy_features(data_df):
     return data_np
 
 
-def test_train_validation_test_split():
-    pass
+def train_validation_test_split(data_df, key):
+     #= data_df.copy(deep=True)
+    train_df = data_df.drop_duplicates(subset=key)
+    test_df = data_df.drop(index=train_df.index)
+    print("Initial Size: %d\tTrain Size: %d\tTest Size: %d"%(len(data_df),len(train_df),len(test_df)))
 
 class Normalize_Features():
 
