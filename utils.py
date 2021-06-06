@@ -36,12 +36,14 @@ def train_validation_test_split(data_df, key):
 class Normalize_Features():
 
     def __init__(self, X):
-        self._means = np.nanmean(X, axis=1)[:, None]
+        self._means = np.nanmean(X.detach().cpu().numpy(), axis=1)[:, None]
+        self._means = torch.tensor(self._means)
 
     def normalize_data(self, X):
-        for row in range(X.shape[0]):
-            X[row] = np.nan_to_num(X[row], nan=self._means[row])
-        return X - self._means
+        X = X - self._means
+        # nan_to_num() exists in documentation, but not live
+        #return torch.nan_to_num(X)
+        return torch.tensor(np.nan_to_num(X.detach().cpu().numpy()))
 
     def unnormalize_data(self, X):
         return X + self._means
