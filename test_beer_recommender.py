@@ -1,12 +1,29 @@
 import unittest
-#from setup import *
-#from utils import *
+import numpy as np
+import pandas as pd
+from setup import *
+from utils import *
 
 class Test_Beer_Recommender(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        self.test_X = np.array([[2, None, 3],[5, 2, None],[3,3,1], [None, 2, 2]])
+        pd_head = ['review_appearance', 'beer_style', 'review_palate', 'review_taste',
+           'beer_name', 'review_timeUnix', 'beer_ABV', 'beer_beerId',
+           'beer_brewerId', 'review_timeStruct', 'review_overall', 'review_text',
+           'user_profileName', 'review_aroma', 'user_gender', 'user_birthdayRaw',
+           'user_birthdayUnix', 'user_ageInSeconds']
+        pd_data = np.array([[0,0,0,0,'0',0,0,0,0,0,2,0,'a',0,0,0,0,0],\
+                            [0,0,0,0,'0',0,0,0,0,0,5,0,'b',0,0,0,0,0],\
+                            [0,0,0,0,'0',0,0,0,0,0,3,0,'c',0,0,0,0,0],\
+                            [0,0,0,0,'1',0,0,1,0,0,2,0,'b',0,0,0,0,0],\
+                            [0,0,0,0,'1',0,0,1,0,0,3,0,'c',0,0,0,0,0],\
+                            [0,0,0,0,'1',0,0,1,0,0,2,0,'d',0,0,0,0,0],\
+                            [0,0,0,0,'2',0,0,2,0,0,3,0,'a',0,0,0,0,0],\
+                            [0,0,0,0,'2',0,0,2,0,0,1,0,'c',0,0,0,0,0],\
+                            [0,0,0,0,'2',0,0,2,0,0,2,0,'d',0,0,0,0,0]])
+        cls._test_X_df = pd.DataFrame(pd_data, columns=pd_head)
+        cls._test_X_np = np.array([[2, np.nan, 3],[5, 2, np.nan],[3,3,1], [np.nan, 2, 2]])
 
     @classmethod
     def tearDownClass(cls):
@@ -28,7 +45,8 @@ class Test_Beer_Recommender(unittest.TestCase):
         pass
 
     def test_get_numpy_features(self):
-        pass
+        converted_df = get_numpy_features(self._test_X_df)
+        self.assertTrue(np.allclose(converted_df, self._test_X_np, equal_nan=True))
 
     def test_train_validation_test_split(self):
         pass
