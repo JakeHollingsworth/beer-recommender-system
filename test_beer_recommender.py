@@ -50,6 +50,8 @@ class Test_Beer_Recommender(unittest.TestCase):
         self.assertTrue(np.allclose(converted_df, self._test_X_np, equal_nan=True))
 
     def test_train_validation_test_split(self):
+        #train_validation_test_split(self._test_X_df,'user_profileName')
+        #self.assertTrue(np.any(1))
         pass
 
     def test_read_trained_model(self):
