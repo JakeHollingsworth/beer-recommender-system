@@ -24,7 +24,8 @@ class Test_Beer_Recommender(unittest.TestCase):
                             [0,0,0,0,'2',0,0,2,0,0,2,0,'d',0,0,0,0,0]])
         cls._test_X_df = pd.DataFrame(pd_data, columns=pd_head)
         cls._test_X_np = np.array([[2, np.nan, 3],[5, 2, np.nan],[3,3,1], [np.nan, 2, 2]])
-        cls._normalize_obj = Normalize_Features(cls._test_X_np)
+        cls._test_X_tens = torch.tensor(cls._test_X_np)
+        cls._normalize_obj = Normalize_Features(cls._test_X_tens)
 
     @classmethod
     def tearDownClass(cls):
@@ -64,15 +65,15 @@ class Test_Beer_Recommender(unittest.TestCase):
         pass
 
     def test_normalize_data(self):
-        normalized_matrix = self._normalize_obj.normalize_data(self._test_X_np)
+        normalized_matrix = self._normalize_obj.normalize_data(self._test_X_tens)
         expected_result = np.array([[-.5, 0, .5], [1.5, -1.5, 0], [2/3, 2/3, -4/3], [0,0,0]])
-        self.assertTrue(np.allclose(normalized_matrix, expected_result))
+        self.assertTrue(np.allclose(normalized_matrix.detach().cpu().numpy(), expected_result))
 
     def test_unnormalize_data(self):
         X = np.array([[-.5, 0, .5], [1.5, -1.5, 0], [2/3, 2/3, -4/3], [0,0,0]])
-        unnormalized_X = self._normalize_obj.unnormalize_data(X)
-        expected_result = np.nan_to_num(self._test_X_np)
-        self.assertTrue(np.allclose(unnormalized_X, expected_result))
+        unnormalized_X = self._normalize_obj.unnormalize_data(torch.tensor(X))
+        expected_result = np.array([[2, 2.5, 3],[5, 2, 3.5],[3,3,1], [2, 2, 2]])
+        self.assertTrue(np.allclose(unnormalized_X.detach().cpu().numpy(), expected_result))
 
     def test_similarity(self):
         pass
