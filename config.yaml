@@ -1,4 +1,12 @@
-data_url: 'http://jmcauley.ucsd.edu/cse255/data/beer/?fbclid=IwAR2bXZ-RF0pW4-9PIYofU4om7Una0E_DBYdD9foRsJwXJUjuUc1DNwlTSLQ'
+data_url: 'http://jmcauley.ucsd.edu/cse255/data/beer/Beeradvocate.txt.gz'
+
+data_path: 'data/'
+
+data_name: 'data.csv'
+
+dropped_keys: []
+
+remove_raw_data: True
 
 optimizer: 'Adam'
 
