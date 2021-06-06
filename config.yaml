@@ -4,9 +4,11 @@ data_path: 'data/'
 
 data_name: 'data.csv'
 
-dropped_keys: []
+dropped_keys: ['review_text']
 
-remove_raw_data: True
+train_validation_test_split_ratio: [0.5,0.2]
+
+remove_raw_data: False
 
 learning_rate: .001
 

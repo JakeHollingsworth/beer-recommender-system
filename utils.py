@@ -27,11 +27,26 @@ def get_numpy_features(data_df):
     return data_np
 
 
-def train_validation_test_split(data_df, key):
-     #= data_df.copy(deep=True)
-    train_df = data_df.drop_duplicates(subset=key)
-    test_df = data_df.drop(index=train_df.index)
-    print("Initial Size: %d\tTrain Size: %d\tTest Size: %d"%(len(data_df),len(train_df),len(test_df)))
+def train_validation_test_split(data_df,train_validation_test_split_ratio,random_state):
+    #grabbing one sample for all unique users and add to train data
+    train_df_index = data_df.sample(frac=1,random_state=random_state).drop_duplicates(subset='user_profileName').index
+    test_df = data_df.drop(index=train_df_index)
+
+    #adding additional samples to reach desired split
+    number_additional_samples = int(train_validation_test_split_ratio[0]*len(data_df)-len(train_df_index))
+    if number_additional_samples > 0:
+        train_additional_indices = test_df.sample(number_additional_samples,
+                                                    random_state=random_state).index
+        test_df.drop(train_additional_indices,inplace=True)
+        train_df_index = train_df_index.append(train_additional_indices)
+
+    #building dataframes
+    train_df = data_df.iloc[train_df_index]
+    validation_df = test_df.sample(frac = train_validation_test_split_ratio[1]/(1-train_validation_test_split_ratio[0]),
+                                    random_state = random_state)
+    test_df.drop(validation_df.index,inplace=True)
+
+    return train_df, validation_df, test_df
 
 class Normalize_Features():
 
