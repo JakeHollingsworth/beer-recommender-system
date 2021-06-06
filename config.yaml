@@ -8,8 +8,6 @@ dropped_keys: []
 
 remove_raw_data: True
 
-optimizer: 'Adam'
-
 learning_rate: .001
 
 regularization_lambda: .002
@@ -18,4 +16,4 @@ N_nearest_items: 50
 
 epochs: 50
 
-batch_size: 128
+latent_dims: 8
