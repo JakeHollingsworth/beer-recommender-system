@@ -19,11 +19,11 @@ def get_numpy_features(data_df):
         user_reviews = data_df[data_df.user_profileName == user]
         user_reviewed_beerIds = user_reviews.beer_beerId
         for id in user_reviewed_beerIds:
-            overall = user_reviews[user_reviews.beer_beerId == id].review_overall
+            overall = user_reviews[user_reviewed_beerIds == id].review_overall
             overall = overall.values.astype(float)[0]
             data_np[i, beerID_to_column[id]] = overall
 
-    return data_nps
+    return data_np
 
 
 def test_train_validation_test_split():
@@ -32,10 +32,12 @@ def test_train_validation_test_split():
 class Normalize_Features():
 
     def __init__(self, X):
-        self.means(X.means(axis=0))
+        self._means = np.nanmean(X, axis=1)[:, None]
 
-    def normalize_data(X):
-        return X - self.means
+    def normalize_data(self, X):
+        for row in range(X.shape[0]):
+            X[row] = np.nan_to_num(X[row], nan=self._means[row])
+        return X - self._means
 
-    def unnormalize_data(X):
-        return X + self.means
+    def unnormalize_data(self, X):
+        return X + self._means
