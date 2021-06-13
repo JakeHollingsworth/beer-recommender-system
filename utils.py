@@ -50,15 +50,12 @@ def train_validation_test_split(data_df,train_validation_test_split_ratio,random
 
 class Normalize_Features():
 
-    def __init__(self, X):
-        self._means = np.nanmean(X.detach().cpu().numpy(), axis=1)[:, None]
-        self._means = torch.tensor(self._means)
+    def __init__(self, X, user_indices):
+        mean_arr = [torch.mean(X[user_indices == i]) for i in range(np.unique(user_indices).shape[0])]
+        self._means = torch.tensor(mean_arr)
 
-    def normalize_data(self, X):
-        X = X - self._means
-        # nan_to_num() exists in documentation, but not live
-        #return torch.nan_to_num(X)
-        return torch.tensor(np.nan_to_num(X.detach().cpu().numpy()))
+    def normalize_data(self, X, user_indices):
+        return X - torch.index_select(self._means, 0, torch.tensor(user_indices, dtype=torch.int32))
 
-    def unnormalize_data(self, X):
-        return X + self._means
+    def unnormalize_data(self, X, user_indices):
+        return X + torch.index_select(self._means, 0, torch.tensor(user_indices, dtype=torch.int32))

@@ -12,20 +12,22 @@ class Test_Beer_Recommender(unittest.TestCase):
            'beer_name', 'review_timeUnix', 'beer_ABV', 'beer_beerId',
            'beer_brewerId', 'review_timeStruct', 'review_overall', 'review_text',
            'user_profileName', 'review_aroma', 'user_gender', 'user_birthdayRaw',
-           'user_birthdayUnix', 'user_ageInSeconds']
-        pd_data = np.array([[0,0,0,0,'0',0,0,0,0,0,2,0,'a',0,0,0,0,0],\
-                            [0,0,0,0,'0',0,0,0,0,0,5,0,'b',0,0,0,0,0],\
-                            [0,0,0,0,'0',0,0,0,0,0,3,0,'c',0,0,0,0,0],\
-                            [0,0,0,0,'1',0,0,1,0,0,2,0,'b',0,0,0,0,0],\
-                            [0,0,0,0,'1',0,0,1,0,0,3,0,'c',0,0,0,0,0],\
-                            [0,0,0,0,'1',0,0,1,0,0,2,0,'d',0,0,0,0,0],\
-                            [0,0,0,0,'2',0,0,2,0,0,3,0,'a',0,0,0,0,0],\
-                            [0,0,0,0,'2',0,0,2,0,0,1,0,'c',0,0,0,0,0],\
-                            [0,0,0,0,'2',0,0,2,0,0,2,0,'d',0,0,0,0,0]])
+           'user_birthdayUnix', 'user_ageInSeconds', 'user_index', 'item_index']
+        pd_data = np.array([[0,0,0,0,'0',0,0,0,0,0,2,0,'a',0,0,0,0,0,0,0],\
+                            [0,0,0,0,'0',0,0,0,0,0,5,0,'b',0,0,0,0,0,1,0],\
+                            [0,0,0,0,'0',0,0,0,0,0,3,0,'c',0,0,0,0,0,2,0],\
+                            [0,0,0,0,'1',0,0,1,0,0,2,0,'b',0,0,0,0,0,1,1],\
+                            [0,0,0,0,'1',0,0,1,0,0,3,0,'c',0,0,0,0,0,2,1],\
+                            [0,0,0,0,'1',0,0,1,0,0,2,0,'d',0,0,0,0,0,3,1],\
+                            [0,0,0,0,'2',0,0,2,0,0,3,0,'a',0,0,0,0,0,0,2],\
+                            [0,0,0,0,'2',0,0,2,0,0,1,0,'c',0,0,0,0,0,2,2],\
+                            [0,0,0,0,'2',0,0,2,0,0,2,0,'d',0,0,0,0,0,3,2]])
         cls._test_X_df = pd.DataFrame(pd_data, columns=pd_head)
+        cls._user_indices = cls._test_X_df['user_index'].values.astype(np.uint8)
+        cls._item_indices = cls._test_X_df['item_index'].values.astype(np.uint8)
         cls._test_X_np = np.array([[2, np.nan, 3],[5, 2, np.nan],[3,3,1], [np.nan, 2, 2]])
-        cls._test_X_tens = torch.tensor(cls._test_X_np)
-        cls._normalize_obj = Normalize_Features(cls._test_X_tens)
+        cls._test_X_tens = torch.tensor(cls._test_X_df['review_overall'].values.astype(np.float64))
+        cls._normalize_obj = Normalize_Features(cls._test_X_tens, cls._user_indices)
 
     @classmethod
     def tearDownClass(cls):
@@ -50,24 +52,13 @@ class Test_Beer_Recommender(unittest.TestCase):
         converted_df = get_numpy_features(self._test_X_df)
         self.assertTrue(np.allclose(converted_df, self._test_X_np, equal_nan=True))
 
-    def test_train_validation_test_split_uniqueness(self):
-        train_validation_test_split_ratio = [0.7,0.1]
-        train_df, validation_df, test_df = train_validation_test_split(self._test_X_df,train_validation_test_split_ratio,random_state=4)
-        self.assertTrue(len(train_df.user_profileName.unique()) == len(self._test_X_df.user_profileName.unique()))
-
-    def test_train_validation_test_split_size(self):
-        train_validation_test_split_ratio = [0.7,0.1]
-        train_df, validation_df, test_df = train_validation_test_split(self._test_X_df,train_validation_test_split_ratio,random_state=4)
-        self.assertTrue(len(train_df) + len(validation_df) + len(test_df) == len(self._test_X_df))
-
-
-    def test_train_validation_test_split_duplicate(self):
+    def test_train_validation_test_split(self):
         train_validation_test_split_ratio = [0.7,0.1]
         train_df, validation_df, test_df = train_validation_test_split(self._test_X_df,train_validation_test_split_ratio,random_state=4)
         df_diff = pd.concat([train_df,validation_df,test_df]).drop_duplicates(keep=False)
+        self.assertTrue(len(train_df) + len(validation_df) + len(test_df) == len(self._test_X_df))
+        self.assertTrue(len(train_df.user_profileName.unique()) == len(self._test_X_df.user_profileName.unique()))
         self.assertTrue(len(df_diff) == len(self._test_X_df))
-
-
 
     def test_read_trained_model(self):
         pass
@@ -79,14 +70,14 @@ class Test_Beer_Recommender(unittest.TestCase):
         pass
 
     def test_normalize_data(self):
-        normalized_matrix = self._normalize_obj.normalize_data(self._test_X_tens)
-        expected_result = np.array([[-.5, 0, .5], [1.5, -1.5, 0], [2/3, 2/3, -4/3], [0,0,0]])
+        normalized_matrix = self._normalize_obj.normalize_data(self._test_X_tens, self._user_indices)
+        expected_result = np.array([-.5, 1.5, 2/3, -1.5, 2/3, 0, .5, -4/3, 0])
         self.assertTrue(np.allclose(normalized_matrix.detach().cpu().numpy(), expected_result))
 
     def test_unnormalize_data(self):
-        X = np.array([[-.5, 0, .5], [1.5, -1.5, 0], [2/3, 2/3, -4/3], [0,0,0]])
-        unnormalized_X = self._normalize_obj.unnormalize_data(torch.tensor(X))
-        expected_result = np.array([[2, 2.5, 3],[5, 2, 3.5],[3,3,1], [2, 2, 2]])
+        X = np.array([-.5, 1.5, 2/3, -1.5, 2/3, 0, .5, -4/3, 0])
+        unnormalized_X = self._normalize_obj.unnormalize_data(torch.tensor(X), self._user_indices)
+        expected_result = [2,5,3,2,3,2,3,1,2]
         self.assertTrue(np.allclose(unnormalized_X.detach().cpu().numpy(), expected_result))
 
     def test_similarity(self):

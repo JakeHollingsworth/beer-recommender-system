@@ -23,34 +23,47 @@ def initialize_system(n_users,n_items,n_latent):
     return X_init, theta_init
 
 class Matrix_Factorization(torch.nn.Module):
-    def __init__(self, X_train, n_latent, alpha, lmda, epochs):
+    def __init__(self, X_train, user_indices, item_indices, n_latent, alpha, lmda, epochs):
+        '''
+        Creates a matrix factorization recommender system.
+
+        Args:
+            X_train - n_reviews x 1, overall review scores.
+            user_indices - n_reviews x 1, index associated with user that submitted the review
+            item_indices - n_reviews x 1, index associated with item that is being reviewed
+            n_latent - number of latent features assigned to each item.
+            alpha - learning rate
+            lmbda - regularization parameter
+            epochs - Number of training epochs
+        '''
 
         super(Matrix_Factorization, self).__init__()
-
         eps = .1 # Move to config.
-        n_users, n_items = X_train.shape
-        self.theta = torch.tensor(np.random.uniform(-eps, eps, size=[n_users, n_latent]), requires_grad=True)
-        self.X = torch.tensor(np.random.uniform(-eps, eps, size=[n_items, n_latent]), requires_grad=True)
-        self.optimizer = torch.optim.Adam([self.X, self.theta], lr=alpha,\
-                                    weight_decay = lmda)
-        self.criterion = torch.nn.MSELoss()
-        self.epochs = epochs
 
-        self.data_normalizer = Normalize_Features(X_train)
-        self.mask = torch.isnan(X_train).clone()
-        self.training_set = self.data_normalizer.normalize_data(X_train)
+        self._theta = torch.tensor(np.random.uniform(-eps, eps, size=[n_users, n_latent]), requires_grad=True)
+        self._X = torch.tensor(np.random.uniform(-eps, eps, size=[n_items, n_latent]), requires_grad=True)
+        self._user_indices = user_indices
+        self._item_indices = item_indices
+
+        self._optimizer = torch.optim.Adam([self.X, self.theta], lr=alpha, weight_decay = lmda)
+        self._criterion = torch.nn.MSELoss()
+        self._epochs = epochs
+
+        self._data_normalizer = Normalize_Features(X_train)
+        self._training_set = self._data_normalizer.normalize_data(X_train, user_indices)
 
     def loss_function(self, pred):
         # weight_decay param to optimizer adds regularization term.
-        return self.loss(pred, self.training_set)
+        return self.loss(pred, self._training_set)
 
     def train(self):
         for e in range(self.epochs):
-            self.optimizer.zero_grad()
-            prediction = torch.matmul(self.theta, self.X.T)
-            loss = self.criterion(prediction[self.mask], self.training_set[self.mask])
+            self._optimizer.zero_grad()
+            # Dot's each user vector with each item vector for each reviewed item.
+            prediction = torch.sum(self._theta[item_index] * self._X[user_index], 1)
+            loss = self._criterion(prediction, self._training_set)
             loss.backward()
-            self.optimizer.step()
+            self._optimizer.step()
 
     def test_model(self):
         pass
