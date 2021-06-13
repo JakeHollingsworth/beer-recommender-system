@@ -59,6 +59,7 @@ class Test_Beer_Recommender(unittest.TestCase):
         self.assertTrue(len(train_df) + len(validation_df) + len(test_df) == len(self._test_X_df))
         self.assertTrue(len(train_df.user_profileName.unique()) == len(self._test_X_df.user_profileName.unique()))
         self.assertTrue(len(df_diff) == len(self._test_X_df))
+        self.assertTrue(len(self._test_X_df.user_profileName.unique())==len(train_df.user_profileName.unique()))
 
     def test_read_trained_model(self):
         pass
