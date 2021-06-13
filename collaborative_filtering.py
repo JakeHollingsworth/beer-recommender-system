@@ -22,10 +22,10 @@ def initialize_system(n_users,n_items,n_latent):
     theta_init = eps * torch.rand(size=[n_items, n_latent])
     return X_init, theta_init
 
-def get_training_info(X_df):
-    X_train = torch.tensor(training_df['review_overall'].values, dtype=torch.float64)
-    user_indices = torch.tensor(training_df['user_index'].values, dtype=torch.int32)
-    item_indices = torch.tensor(training_df['item_index'].values, dtype=torch.int32)
+def get_data_info(X_df):
+    X_train = torch.tensor(X_df['review_overall'].values, dtype=torch.float64)
+    user_indices = torch.tensor(X_df['user_index'].values, dtype=torch.int32)
+    item_indices = torch.tensor(X_df['item_index'].values, dtype=torch.int32)
     return X_train, user_indices, item_indices
 
 class Matrix_Factorization(torch.nn.Module):
@@ -58,10 +58,6 @@ class Matrix_Factorization(torch.nn.Module):
         self._data_normalizer = Normalize_Features(X_train, user_indices)
         self._training_set = self._data_normalizer.normalize_data(X_train, user_indices)
 
-    def loss_function(self, pred):
-        # weight_decay param to optimizer adds regularization term.
-        return self.loss(pred, self._training_set)
-
     def train(self):
         for e in range(self._epochs):
             self._optimizer.zero_grad()
@@ -73,16 +69,44 @@ class Matrix_Factorization(torch.nn.Module):
             loss.backward()
             self._optimizer.step()
 
-    def test_model(self):
-        pass
+    def test_model(self, X_test, test_user_indices, test_item_indices):
+        theta = torch.index_select(self._theta, 0, self._user_indices)
+        x = torch.index_select(self._X, 0, self._item_indices)
+        prediction = torch.sum(theta * x, 1)
+        mean_training_error = self._criterion(prediction, self._training_set).item()
+
+        theta_test = torch.index_select(self._theta, 0, test_user_indices)
+        x_test = torch.index_select(self._X, 0, test_item_indices)
+        test_predictions = torch.sum(theta_test * x_test, 1)
+        print(test_predictions.shape, X_test.shape)
+        mean_testing_error = self._criterion(test_predictions, X_test).item()
+
+        print('Mean L2 training error : ', mean_training_error)
+        print('Mean L2 testing error  : ', mean_testing_error)
+
+class New_User(torch.nn.Module):
+    def __init__(self, saved_model_path, n_latent, alpha, lmda):
+        super(Matrix_Factorization, self).__init__()
+        self._X = None
+        self._optimizer = torch.optim.Adam(self._theta, lr=alpha, weight_decay = lmda)
+        self._criterion = torch.nn.MSELoss()
+
+    def read_trained_model(self):
+        model = TheModelClass(*args, **kwargs)
+        model.load_state_dict(torch.load(PATH))
+        model.eval()
+
 
 if __name__ == '__main__':
     config = read_config()
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    training_df = pd.read_csv(config['data_path']+config['data_name'], nrows=10000)
-    X_train, user_indices, item_indices = get_training_info(training_df)
+    full_df = pd.read_csv(config['data_path']+config['data_name'], nrows=100000)
+    training_df, val_df, test_df = train_validation_test_split(full_df, [.7, .15], 4)
+    X_train, user_indices, item_indices = get_data_info(training_df)
     matrix_fact_model = Matrix_Factorization(X_train, user_indices, item_indices, \
                           config['latent_dims'], config['learning_rate'], \
                           config['regularization_lambda'], config['epochs'])
     matrix_fact_model.to(device)
     matrix_fact_model.train()
+    X_val, val_user_indices, val_item_indices = get_data_info(val_df)
+    matrix_fact_model.test_model(X_val, val_user_indices, val_item_indices)
