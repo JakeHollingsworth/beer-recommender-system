@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 import matplotlib.pyplot as plt
+import pickle
 
 from utils import *
 
@@ -84,18 +85,59 @@ class Matrix_Factorization(torch.nn.Module):
         print('Mean L2 training error : ', mean_training_error)
         print('Mean L2 testing error  : ', mean_testing_error)
 
+    def save_model(self, model_file):
+        save_dict = {
+                      "X"         : self._X.detach().cpu().numpy(),
+                      "Theta"     : self._theta.detach().cpu().numpy()
+                    }
+        with open(model_file, 'wb') as f:
+            pickle.dump(save_dict, f)
+
 class New_User(torch.nn.Module):
-    def __init__(self, saved_model_path, n_latent, alpha, lmda):
+    def __init__(self, saved_model_path, alpha, lmda, epochs):
         super(Matrix_Factorization, self).__init__()
-        self._X = None
-        self._optimizer = torch.optim.Adam(self._theta, lr=alpha, weight_decay = lmda)
+        model_tensors = self.read_trained_model(saved_model_path)
+        self._X = model_tensors['X']
+        self._n_latent = self._X.shape[1]
+        self._lmda = lmda
+        self._alpha = alpha
+        self._epochs = epochs
+        self._user_rated_item_indices = []
+        self._user_rated_item_ratings = []
+
+        self.initialize_new_user_model()
+
+    def initialize_new_user_model(self):
+        eps=.1
+        self._user_theta = torch.tensor(np.random.uniform(-eps, eps, size=[1, self._n_latent]), requires_grad=True)
+        self._optimizer = torch.optim.Adam(self._user_theta, lr=self._alpha, weight_decay = self._lmda)
         self._criterion = torch.nn.MSELoss()
 
-    def read_trained_model(self):
-        model = TheModelClass(*args, **kwargs)
-        model.load_state_dict(torch.load(PATH))
-        model.eval()
+    def read_trained_model(self, model_file):
+        with open(model_file, 'rb') as f:
+            model_tensors = pickle.load(f)
+        return model_tensors
 
+    def add_new_rating(self, new_item_ind, new_item_rating):
+        self.user_rated_item_indices.append(new_item_ind)
+        self.user_rated_item_ratings.append(new_item_rating)
+        self.initialize_new_user_model()
+        self.train()
+
+    def train(self):
+        for e in range(self._epochs):
+            self._optimizer.zero_grad()
+            theta = torch.tile(self._user_theta, (1, len(self._user_rated_item_indices)))
+            x = torch.index_select(self._X, 0, np.array(self._user_rated_item_indices))
+            # Dot's each user vector with each item vector for each reviewed item.
+            prediction = torch.sum(theta * x, 1)
+            loss = self._criterion(prediction, np.array(self.user_rated_item_ratings))
+            loss.backward()
+            self._optimizer.step()
+
+    def get_top_N(self, N):
+        theta = torch.tile(self._user_theta, (1, self._X.shape[0]))
+        max()
 
 if __name__ == '__main__':
     config = read_config()

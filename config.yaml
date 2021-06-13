@@ -12,10 +12,10 @@ remove_raw_data: False
 
 learning_rate: .001
 
-regularization_lambda: .002
+regularization_lambda: .02
 
 N_nearest_items: 50
 
-epochs: 50
+epochs: 3000
 
-latent_dims: 8
+latent_dims: 12

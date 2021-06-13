@@ -35,10 +35,6 @@ def train_validation_test_split(data_df,train_validation_test_split_ratio,random
     train_df_index = np.union1d(train_df_index_user, train_df_index_beer)
     #print(train_df_index_user.shape,train_df_index_beer.shape,train_df_index.shape)
     test_df = data_df.drop(index=train_df_index)
-    print(train_df_index)
-    print(len(train_df_index_user))
-    print(len(train_df_index_beer))
-    print(len(train_df_index))
     #adding additional samples to reach desired split
     number_additional_samples = int(train_validation_test_split_ratio[0]*len(data_df)-len(train_df_index))
     if number_additional_samples > 0:
