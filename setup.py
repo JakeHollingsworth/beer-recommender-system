@@ -5,6 +5,7 @@ import gzip
 import simplejson
 import pandas as pd
 import os
+import numpy as np
 
 
 def request_data(url,data_path,force_download=False):
@@ -13,8 +14,8 @@ def request_data(url,data_path,force_download=False):
         r = requests.get(url)
         open(data_path + 'raw_data.txt.gz', 'wb').write(r.content)
     else:
-        print('Dataset Already Exists. Skipping Download')   
-    
+        print('Dataset Already Exists. Skipping Download')
+
 def format_data(data_path,max_rows=-1):
     #loading code from the website with minor modifications
     def parse(filename):
@@ -70,10 +71,27 @@ def format_data(data_path,max_rows=-1):
     dF = pd.DataFrame(data_list)
     decodedDF = pd.DataFrame()
     for key in dF.keys():
-        if type(dF[key][0]) == type(b'a'):      
+        if type(dF[key][0]) == type(b'a'):
             decodedDF[key.decode("utf-8").replace('/','_')] = dF[key].str.decode("utf-8")
         else:
             decodedDF[key.decode("utf-8").replace('/','_')] = dF[key]
+
+
+    decodedDF['user_index'] = np.zeros((len(decodedDF),),dtype=np.int)
+    decodedDF['item_index'] = np.zeros((len(decodedDF),),dtype=np.int)
+    user_dict = {}
+    item_dict = {}
+
+    print('user_profileName')
+    for i, name in enumerate(decodedDF['user_profileName'].unique()):
+        user_dict[name] = i
+
+    #    print('beer_beerId')
+    for i, name in enumerate(decodedDF['beer_beerId'].unique()):
+        item_dict[name] = i
+
+    decodedDF['user_index']= decodedDF['user_profileName'].map(user_dict)
+    decodedDF['item_index']= decodedDF['beer_beerId'].map(item_dict)
 
     return decodedDF
 
@@ -82,7 +100,7 @@ def write_data(dF,data_path,data_name='data.csv',dropped_keys = []):
         if key in dF.keys():
             dF = dF.drop(key,axis=1)
     dF.to_csv(data_path + data_name,index=False)
-        
+
 def main():
     config_dict = read_config()
     print('Requesting Data')
@@ -97,10 +115,14 @@ def main():
         print('Removing Raw Data')
         os.remove(config_dict['data_path'] + 'raw_data.txt.gz')
 
-    
+
 if __name__ == '__main__':
     config_dict = read_config()
 
-    main()
+    #main()
     dF = pd.read_csv(config_dict['data_path'] + config_dict['data_name'])
+    print(dF.keys())
+    print(len(dF['user_profileName'].unique()), np.max(dF['user_index'])+1)
+    print(len(dF['beer_beerId'].unique()), np.max(dF['item_index'])+1)
+
     #print(dF.head())
