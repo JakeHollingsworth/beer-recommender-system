@@ -1,4 +1,4 @@
-from utils import read_config
+from utils import read_config, write_dictionary
 import requests
 import time
 import gzip
@@ -114,6 +114,7 @@ def main():
     if config_dict['remove_raw_data']:
         print('Removing Raw Data')
         os.remove(config_dict['data_path'] + 'raw_data.txt.gz')
+    write_dictionary(dF)
 
 
 if __name__ == '__main__':
