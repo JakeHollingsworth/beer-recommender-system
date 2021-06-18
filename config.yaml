@@ -10,12 +10,14 @@ train_validation_test_split_ratio: [0.5,0.2]
 
 remove_raw_data: False
 
-learning_rate: .001
+learning_rate: .01
 
-regularization_lambda: .02
+regularization_lambda: 0.00001
 
 N_nearest_items: 50
 
-epochs: 3000
+epochs: 200
 
-latent_dims: 12
+latent_dims: 8
+
+model_file: "data/torch_model.pickle"

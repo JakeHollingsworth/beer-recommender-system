@@ -119,10 +119,5 @@ def main():
 if __name__ == '__main__':
     config_dict = read_config()
 
-    main()
+    #main()
     dF = pd.read_csv(config_dict['data_path'] + config_dict['data_name'])
-    print(dF.keys())
-    print(len(dF['user_profileName'].unique()), np.max(dF['user_index'])+1)
-    print(len(dF['beer_beerId'].unique()), np.max(dF['item_index'])+1)
-
-    #print(dF.head())

@@ -2,33 +2,14 @@ import yaml
 import torch
 import pandas as pd
 import numpy as np
-from collaborative_filtering import *
-
+import pickle
 
 def read_config():
     with open('config.yaml') as file:
         config_dict = yaml.load(file, Loader=yaml.FullLoader)
     return config_dict
 
-def get_numpy_features(data_df):
-    unique_users = data_df.user_profileName.unique()
-    unique_beers = data_df.beer_beerId.unique()
-    beerID_to_column = {id: i for i, id in enumerate(unique_beers)}
-
-    data_np = np.empty(shape=(unique_users.shape[0], unique_beers.shape[0]))
-    data_np.fill(np.nan)
-    for i, user in enumerate(unique_users):
-        user_reviews = data_df[data_df.user_profileName == user]
-        user_reviewed_beerIds = user_reviews.beer_beerId
-        for id in user_reviewed_beerIds:
-            overall = user_reviews[user_reviewed_beerIds == id].review_overall
-            overall = overall.values.astype(float)[0]
-            data_np[i, beerID_to_column[id]] = overall
-
-    return data_np
-
-
-def train_validation_test_split(data_df,train_validation_test_split_ratio,random_state):
+def train_validation_test_split(data_df,train_validation_test_split_ratio,random_state=4):
     #grabbing one sample for all unique users and add to train data
     train_df_index_user = data_df.sample(frac=1,random_state=random_state).drop_duplicates(subset='user_profileName').index
     train_df_index_beer = data_df.sample(frac=1,random_state=random_state).drop_duplicates(subset='beer_beerId').index
@@ -50,6 +31,21 @@ def train_validation_test_split(data_df,train_validation_test_split_ratio,random
 
     return train_df, validation_df, test_df
 
+def get_data_info(X_df):
+    X_train = torch.tensor(X_df['review_overall'].values, dtype=torch.float64)
+    user_indices = torch.tensor(X_df['user_index'].values, dtype=torch.long)
+    item_indices = torch.tensor(X_df['item_index'].values, dtype=torch.long)
+    return X_train, user_indices, item_indices
+
+def write_dictionary(X_df):
+    item_ids = list(X_df['item_index'].values)
+    item_names = list(X_df['beer_name'].values)
+    id_to_name = {id: name for id, name in zip(item_ids, item_names)}
+    name_to_id = {name: id for id, name in zip(item_ids, item_names)}
+    dicts = {"id_to_name": id_to_name, "name_to_id": name_to_id}
+    with open("data/dicts.pickle", 'wb') as f:
+        pickle.dump(dicts, f)
+
 class Normalize_Features():
 
     def __init__(self, X, user_indices):
@@ -57,17 +53,13 @@ class Normalize_Features():
         self._means = torch.tensor(mean_arr)
 
     def normalize_data(self, X, user_indices):
-        return X - torch.index_select(self._means, 0, torch.tensor(user_indices, dtype=torch.int32))
+        return X - torch.index_select(self._means, 0, torch.tensor(user_indices, dtype=torch.long))
 
     def unnormalize_data(self, X, user_indices):
-        return X + torch.index_select(self._means, 0, torch.tensor(user_indices, dtype=torch.int32))
+        return X + torch.index_select(self._means, 0, torch.tensor(user_indices, dtype=torch.long))
 
-if __name__ == "__main__":
-    #user = New_User()
-    #user.load_model('a')
-    dF  = pd.read_csv('data/data.csv',nrows=500)
-    print(dF.head())
-    train, validation, test = train_validation_test_split(dF,[0.7,0.15],4)
 
-    print(len(dF['beer_beerId'].unique())==len(train['beer_beerId'].unique()))
-    print(len(dF['user_profileName'].unique())==len(train['user_profileName'].unique()))
+if __name__=="__main__":
+    config = read_config()
+    X_df = pd.read_csv(config['data_path']+config['data_name'])
+    write_dictionary(X_df)

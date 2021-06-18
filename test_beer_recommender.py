@@ -48,10 +48,6 @@ class Test_Beer_Recommender(unittest.TestCase):
     def test_read_data(self):
         pass
 
-    def test_get_numpy_features(self):
-        converted_df = get_numpy_features(self._test_X_df)
-        self.assertTrue(np.allclose(converted_df, self._test_X_np, equal_nan=True))
-
     def test_train_validation_test_split(self):
         train_validation_test_split_ratio = [0.7,0.1]
         train_df, validation_df, test_df = train_validation_test_split(self._test_X_df,train_validation_test_split_ratio,random_state=4)
@@ -78,7 +74,7 @@ class Test_Beer_Recommender(unittest.TestCase):
     def test_unnormalize_data(self):
         X = np.array([-.5, 1.5, 2/3, -1.5, 2/3, 0, .5, -4/3, 0])
         unnormalized_X = self._normalize_obj.unnormalize_data(torch.tensor(X), self._user_indices)
-        expected_result = [2,5,3,2,3,2,3,1,2]
+        expected_result = self._test_X_df['review_overall'].values.astype(np.float64)
         self.assertTrue(np.allclose(unnormalized_X.detach().cpu().numpy(), expected_result))
 
     def test_similarity(self):
