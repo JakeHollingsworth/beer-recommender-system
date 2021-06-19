@@ -21,6 +21,7 @@ def init_session():
         session['item_ratings'] = []
 def get_closest_beers(query):
     result = process.extract(query, names, limit=5)
+    # Process returns (value, score) tuples
     return [match[0] for match in result]
 
 @app.route("/", methods=["POST", "GET"])
@@ -32,35 +33,36 @@ def root_page():
     rated_items = session['rated_items']
     item_ratings = session['item_ratings']
     if request.method=="POST":
+        # Search bar request
         if 'searchButton' in request.form:
             search = request.form["search"]
             closest_searches = get_closest_beers(search)
+        # Click on a close search
         elif any(['closest' + str(i) in request.form for i in range(len(closest_searches))]):
             for i in range(len(closest_searches)):
                 if 'closest' + str(i) in request.form:
                     break
             selection = closest_searches[i]
+        # Click on a recommendation
         elif any(['rec' + str(i) in request.form for i in range(len(recommendations))]):
             for i in range(len(recommendations)):
                 if 'rec' + str(i) in request.form:
                     break
             selection = recommendations[i]
-        elif 'rate' in request.form:
-            if 'star' in request.form:
-                new_rating = int(request.form['star'][0])
-
-                if selection in rated_items:
-                    item_ratings[rated_items.index(selection)] = new_rating
-                else:
-                    rated_items.append(int(name_to_id[selection]))
-                    item_ratings.append(new_rating)
-                mu = sum(item_ratings) / len(item_ratings)
-                model_ratings = [r - mu for r in item_ratings]
-                user_ml_model.add_new_rating(rated_items, model_ratings)
-                recommendation_inds = user_ml_model.get_top_N(10)
-                print([type(i) for i in recommendation_inds])
-                recommendations = [id_to_name[i] for i in recommendation_inds]
-
+        # Clicks a rating and submits
+        elif 'rating' in request.form:
+            new_rating = int(request.form['rating'][0])
+            if selection in rated_items:
+                item_ratings[rated_items.index(selection)] = new_rating
+            else:
+                rated_items.append(int(name_to_id[selection]))
+                item_ratings.append(new_rating)
+            mu = sum(item_ratings) / len(item_ratings)
+            model_ratings = [r - mu for r in item_ratings]
+            user_ml_model.add_new_rating(rated_items, model_ratings)
+            recommendation_inds = user_ml_model.get_top_N(10)
+            print([type(i) for i in recommendation_inds])
+            recommendations = [id_to_name[i] for i in recommendation_inds]
 
         session['closest_searches'] = closest_searches
         session['recommendations'] = recommendations
@@ -71,7 +73,7 @@ def root_page():
                            recommendations=recommendations, selection=selection)
 
 
-
+#sudo lsof -t -i:5000
 if __name__=='__main__':
     config = read_config()
     with open("data/dicts.pickle", 'rb') as f:

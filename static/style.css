@@ -1,8 +1,35 @@
+:root {
+    --ff-primary: 'Source Sans Pro', sans-serif;
+    --ff-secondary: 'Source Code Pro', monospace;
+
+    --fw-reg: 300;
+    --fw-bold: 900;
+
+    --clr-light: #fff;
+    --clr-dark: #1b1b1b;
+    --clr-grey: #404040;
+    --clr-stars: #ffa41c;
+
+    --fs-h3: 3rem;
+    --fs-h4: 2rem;
+    --fs-button: 1.5rem;
+    --fs-body: 1rem;
+}
+
+@media (min-width: 800px){
+    :root {
+        --fs-h3: 4.5rem;
+        --fs-h4: 2.75rem;
+        --fs-button: 2rem;
+        --fs-body: 1.25rem;
+    }
+}
+
 body {
     font-family: Arial, Helvetica, sans-serif;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0,0,0,.7);
+    margin: 0;
+    padding: 0;
+    background-color: var(--clr-light);
     display:flex;
     height: 100vh
 }
@@ -12,6 +39,17 @@ body {
   align-items: center;
   justify-content: center;
   height:100vh;
+}
+
+.header {
+    display:block;
+    position:fixed;
+    width: 100%;
+    align-items: left;
+    justify-content: left;
+    padding-top: 1.5em;
+    padding-bottom: 1.5em;
+    background-color:var(--clr-dark);
 }
 
 .column {
@@ -47,117 +85,117 @@ body {
 }
 
 .textBox{
-  font-size: 24pt;
+  font-size: var(--fs-h4);
   border-radius: 20px;
-  color: white;
-  background-color: rgba(0,0,0,.1);
-  width: 65%;
+  color: var(--clr-light);
+  background-color: var(--clr-grey);
+  width: 35%;
   padding-left:10px;
   margin-left:20px
 }
 
 .submitButton{
-  font-size: 24pt;
+  font-size: var(--fs-h4);
   border-radius: 20px;
   color: white;
-  background-color: rgba(0,0,0,.1);
+  background-color: var(--clr-grey);
   cursor:pointer;
-  width: 25%;
+  width: 15%;
 }
 
 h1{
-   color:white;
+   color:var(--clr-dark);
    font-size: 36pt;
    text-align: center;
    margin-top: 50px;
 }
 
 .tableCloseSearches{
-  font-size: 24pt;
+  font-size: var(--fs-button);
   width: 100%;
   height: 50vh;
   display: block;
-  color: white;
-  margin-top:30px;
+  color: var(--clr-dark);
+  margin-top:3em;
 }
 
 .searchTableButton{
   width:100%;
-  font-size: 24pt;
+  font-size: var(--fs-button);
   height: 10vh;
   display: block;
   cursor:pointer;
-  color: white;
-  background-color: rgba(0,0,0,.1);
-  border-color:white;
+  color: var(--clr-dark);
+  background-color: var(--clr-light);
+  border-color:var(--clr-dark);
   border-width: 1px;
   border-radius: 20px;
 }
 
 .tableRecBeers{
-  font-size: 24pt;
+  font-size: var(--fs-button);
   width: 100%;
   height: 50vh;
   display: block;
-  color: white;
-  margin-top:55px;
+  color: var(--clr-light);
+  margin-top:1rem;
 }
 
 .recTableButton{
   width:100%;
-  font-size: 24pt;
+  font-size: var(--fs-button);
   height: 7vh;
   display: block;
   cursor:pointer;
-  color: white;
-  background-color: rgba(0,0,0,.1);
-  border-color:white;
+  color: var(--clr-dark);
+  background-color: var(--clr-light);
+  border-color:var(--clr-dark);
   border-width: 1px;
   border-radius: 20px;
 }
 
 
 .selectedItem{
-  font-size: 48pt;
-  color: white;
+  font-size: var(--fs-button);
+  color: var(--clr-dark);
   width: 100%;
   margin-top: 50px;
 }
 
 div.stars {
+  font-size: var(--fs-h3);
   display:inline-block;
   position:relative;
   left:50%;
   transform:translate(-50%,0);
 }
 
-input.star { display: none; }
-
-label.star {
+button {
+  border: 0;
+  background: transparent;
+  color: var(--clr-light);
+  font-size: 1.5em;
+  margin: 0;
+  padding: 0;
   float: right;
-  padding: 10px;
-  font-size: 36px;
-  color: #FD4;
-  transition: all .2s;
+  text-shadow: -1px 0 var(--clr-dark), 0 1px var(--clr-dark), 1px 0 var(--clr-dark), 0 -1px var(--clr-dark);
 }
 
-input.star:checked ~ label.star:before {
-  content: '\f005';
-  color: #FD4;
-  transition: all .25s;
+button:hover { transform: rotate(-15deg) scale(1.3); }
+
+button:hover,
+button:hover + button,
+button:hover + button + button,
+button:hover + button + button + button,
+button:hover + button + button + button + button {
+  color: var(--clr-stars);
 }
-
-input.star-5:checked ~ label.star:before {
-  color: #FE7;
-  text-shadow: 0 0 20px #952;
-}
-
-input.star-1:checked ~ label.star:before { color: #F62; }
-
-label.star:hover { transform: rotate(-15deg) scale(1.3); }
-
-label.star:before {
-  content: '\f006';
-  font-size: 48pt;
-  font-family: FontAwesome;
+.footer {
+    display:block;
+    position:fixed;
+    width: 100%;
+    bottom:0;
+    left:0;
+    height: 2.5rem;
+    background-color:var(--clr-dark);
 }

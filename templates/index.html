@@ -6,58 +6,62 @@
     <title> Recommender System Interface</title>
   </head>
   <body>
-    <div class="row">
-      <div class="column">
+      <!------ Header Bar ------>
+      <header class="header">
+        <!----- Search bar ------>
         <form action="#" method="POST">
-          <input type="text" placeholder="Search beers..." class=textBox name="search">
-          <input type="submit" placeholder="Search" class=submitButton name="searchButton">
+            <input type="text" placeholder="Search beers..." class=textBox name="search">
+            <input type="submit" placeholder="Search" class=submitButton name="searchButton">
         </form>
-        <div class="tableCloseSearches">
-          Select the beer you wish to rate:
-          <table>
-            {% for search in closest_searches %}
-                <tr>
-                    <form action="" method="POST">
-                    <input type="submit" name="closest{{loop.index0}}" class=searchTableButton value="{{search}}">
+      </header>>
+      <div class="row">
+        <!--------- Column 1 -------->
+        <div class="column">
+            <!----- Table of close searches ------>
+            <div class="tableCloseSearches">
+                Select the beer you wish to rate:
+                <table>
+                    {% for search in closest_searches %}
+                    <tr>
+                        <form action="" method="POST">
+                            <input type="submit" name="closest{{loop.index0}}" class=searchTableButton value="{{search}}">
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <!----- 5 Stars for Rating ------>
+            <div class="selectedItem">
+                <p>Current Selection: {{selection}}</p>
+                <div class="stars">
+                    <form action="" method="POST" onsubmit="">
+                        <input type="hidden" name="rating_hidden" value="3">
+                        <button type="submit" name="rating" value=5>&#9733;</button>
+                        <button type="submit" name="rating" value=4>&#9733;</button>
+                        <button type="submit" name="rating" value=3>&#9733;</button>
+                        <button type="submit" name="rating" value=2>&#9733;</button>
+                        <button type="submit" name="rating" value=1>&#9733;</button>
                     </form>
-                </tr>
-            {% endfor %}
-          </table>
+                </div>
+            </div>
         </div>
-        <div class="selectedItem">
-          <p>Current Selection: {{selection}}</p>
-          <div class="stars">
-           <form action="" method="POST" onsubmit="">
-             <input class="star star-5" id="star-5" type="radio" name="star" value="5"/>
-             <label class="star star-5" for="star-5"></label>
-             <input class="star star-4" id="star-4" type="radio" name="star" value="4"/>
-             <label class="star star-4" for="star-4"></label>
-             <input class="star star-3" id="star-3" type="radio" name="star" value="3"/>
-             <label class="star star-3" for="star-3"></label>
-             <input class="star star-2" id="star-2" type="radio" name="star" value="2"/>
-             <label class="star star-2" for="star-2"></label>
-             <input class="star star-1" id="star-1" type="radio" name="star" value="1"/>
-             <label class="star star-1" for="star-1"></label>
-             <input type="submit" name="rate" class="review" placeholder="Submit rating!">
-           </form>
-          </div>
+        <!----- Column 2 ------>
+        <div class="column">
+            <!----- Recommendations Table ------>
+            <h1> Recommendations </h1>
+            <div class="tableRecBeers">
+                <table>
+                    {% for rec in recommendations %}
+                    <tr>
+                        <form action="" method="POST">
+                            <input type="submit" value="{{loop.index0 + 1}}. {{rec}}" name=rec{{loop.index0}} class=recTableButton name="pressed">
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
         </div>
-      </div>
-      <div class="column">
-        <h1> Recommendations </h1>
-        <div class="tableRecBeers">
-          <table>
-            {% for rec in recommendations %}
-                <tr>
-                    <form action="" method="POST">
-                    <input type="submit" value="{{loop.index0 + 1}}. {{rec}}" name=rec{{loop.index0}} class=recTableButton name="pressed">
-                    </form>
-                </tr>
-            {% endfor %}
-          </table>
-        </div>
-      </div>
     </div>
-
   </body>
+  <div class="footer"></div>
 </html>
