@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 import matplotlib.pyplot as plt
-import pickle
+import pickle, sys
 
 from utils import *
 
@@ -107,7 +107,7 @@ class New_User(torch.nn.Module):
         self._epochs = epochs
         self._user_rated_item_indices = []
         self._user_rated_item_ratings = []
-
+        self.read_dictionaries()
         self.initialize_new_user_model()
 
     def initialize_new_user_model(self):
@@ -138,12 +138,49 @@ class New_User(torch.nn.Module):
             loss.backward()
             self._optimizer.step()
 
+    def get_similarities(self, candidate_inds):
+        # Item similarities between already rated items and candidates.
+        user_ratings = torch.tensor(self.user_rated_item_ratings)
+        # Weight according to user rating
+        rated_thetas = torch.nn.functional.normalize(self._X[self.user_rated_item_indices]) * user_ratings[:,None]
+        prediction_thetas = torch.nn.functional.normalize(self._X[candidate_inds]).T
+        weighted_similaritys = torch.matmul(rated_thetas, prediction_thetas)
+        return torch.sum(weighted_similaritys, 0)
+
+    def get_popularities(self, candidate_inds):
+        popularities = [self.popularities[i.item()] for i in candidate_inds]
+        popularities = torch.tensor(popularities, dtype=torch.float32)
+        transformation = lambda x: torch.log(x + 1) / torch.log(torch.max(x) + 1)
+        return transformation(popularities)
+
     def get_top_N(self, N):
+        model_weight = 1
+        sim_weight = 1
+        pop_weight = 1
         theta = self._user_theta.repeat(self._X.shape[0],1)
         predictions = torch.sum(theta * self._X, 1)
-        _, top_N_indices = torch.topk(predictions, N)
+        # Predicted ratings
+        scores, top_N_indices = torch.topk(predictions, 5*N)
+        mask = [0 if k.item() in self.user_rated_item_indices else 1 for k in top_N_indices]
+        mask = torch.tensor(mask, dtype=torch.bool)
+        candidate_indices = top_N_indices[mask]
+        similarities = self.get_similarities(candidate_indices)
+        popularities = self.get_popularities(candidate_indices)
+        print("Scores :", scores, file=sys.stderr)
+        print("Sims :", similarities, file=sys.stderr)
+        print("Pops :", popularities, file=sys.stderr)
+        ranking = model_weight * scores[mask] + sim_weight * similarities + \
+                  pop_weight * popularities
+        _, final_recs = torch.topk(ranking, N)
+        best_indices = candidate_indices[final_recs]
         # Cast to python ints
-        return [int(i) for i in top_N_indices]
+        return [int(i) for i in best_indices]
+
+    def read_dictionaries(self, dicts_file='data/dicts.pickle'):
+        with open(dicts_file, 'rb') as f:
+            dicts = pickle.load(f)
+        self.popularities = dicts['id_to_pop']
+
 
 if __name__ == '__main__':
     config = read_config()
@@ -155,9 +192,9 @@ if __name__ == '__main__':
                           config['latent_dims'], config['learning_rate'], \
                           config['regularization_lambda'], config['epochs'])
     matrix_factor_model.to(device)
-    matrix_factor_model.fit_model()
-    matrix_factor_model.save_model('torch_model.pickle')
-    #matrix_factor_model.load_model('torch_model.pickle')
+    #matrix_factor_model.fit_model()
+    #matrix_factor_model.save_model('torch_model.pickle')
+    matrix_factor_model.load_model('torch_model.pickle')
     X_val, val_user_indices, val_item_indices = get_data_info(val_df)
     matrix_factor_model.test_model(X_val, val_user_indices, val_item_indices)
     '''

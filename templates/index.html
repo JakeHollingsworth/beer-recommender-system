@@ -36,19 +36,36 @@
                 <div class="stars">
                     <form action="" method="POST" onsubmit="">
                         <input type="hidden" name="rating_hidden" value="3">
-                        <button type="submit" name="rating" value=5>&#9733;</button>
-                        <button type="submit" name="rating" value=4>&#9733;</button>
-                        <button type="submit" name="rating" value=3>&#9733;</button>
-                        <button type="submit" name="rating" value=2>&#9733;</button>
-                        <button type="submit" name="rating" value=1>&#9733;</button>
+                        <button class="star" type="submit" name="rating" value=5>&#9733;</button>
+                        <button class="star" type="submit" name="rating" value=4>&#9733;</button>
+                        <button class="star" type="submit" name="rating" value=3>&#9733;</button>
+                        <button class="star" type="submit" name="rating" value=2>&#9733;</button>
+                        <button class="star" type="submit" name="rating" value=1>&#9733;</button>
                     </form>
                 </div>
             </div>
         </div>
         <!----- Column 2 ------>
         <div class="column">
+            <h1> You may also like... </h1>
+            <!----- Dropdown Menu ------>
+            <div class="dropdown">
+                <button class="dropbtn">&#9776;</button>
+                <div class="dropdown-content">
+                    <form action="" method="POST" onsubmit="">
+                        <button class="restart" type="submit" name="restart">Delete history</button>
+                    </form>
+                    Current Ratings:<br>
+                    <table>
+                        {% for r in user_ratings%}
+                        <tr>
+                            Rating: {{r}}    Name: {{user_items[loop.index0]}}<br>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
             <!----- Recommendations Table ------>
-            <h1> Recommendations </h1>
             <div class="tableRecBeers">
                 <table>
                     {% for rec in recommendations %}

@@ -19,6 +19,7 @@ def init_session():
         session['rated_items'] = []
     if 'item_ratings' not in session:
         session['item_ratings'] = []
+
 def get_closest_beers(query):
     result = process.extract(query, names, limit=5)
     # Process returns (value, score) tuples
@@ -52,17 +53,27 @@ def root_page():
         # Clicks a rating and submits
         elif 'rating' in request.form:
             new_rating = int(request.form['rating'][0])
-            if selection in rated_items:
-                item_ratings[rated_items.index(selection)] = new_rating
+            if selection not in name_to_id:
+                selection = "Not a valid selection, use the search bar."
             else:
-                rated_items.append(int(name_to_id[selection]))
-                item_ratings.append(new_rating)
-            mu = sum(item_ratings) / len(item_ratings)
-            model_ratings = [r - mu for r in item_ratings]
-            user_ml_model.add_new_rating(rated_items, model_ratings)
-            recommendation_inds = user_ml_model.get_top_N(10)
-            print([type(i) for i in recommendation_inds])
-            recommendations = [id_to_name[i] for i in recommendation_inds]
+                if int(name_to_id[selection]) in rated_items:
+                    item_ratings[rated_items.index(int(name_to_id[selection]))] = new_rating
+                else:
+                    rated_items.append(int(name_to_id[selection]))
+                    item_ratings.append(new_rating)
+                mu = sum(item_ratings) / len(item_ratings)
+                model_ratings = [r - mu for r in item_ratings]
+                user_ml_model.add_new_rating(rated_items, model_ratings)
+                recommendation_inds = user_ml_model.get_top_N(10)
+                recommendations = [id_to_name[i] for i in recommendation_inds]
+        # Deletes history
+        elif 'restart' in request.form:
+            closest_searches = ['Search', 'for', 'a', 'beer', 'above!']
+            recommendations = ['Beer A', 'Beer B', 'Beer C', 'Beer D', 'Beer E', 'Beer F', 'Beer G', 'Beer H', 'Beer I', 'Beer J']
+            selection = 'your beer'
+            rated_items = []
+            item_ratings = []
+            user_ml_model.initialize_new_user_model()
 
         session['closest_searches'] = closest_searches
         session['recommendations'] = recommendations
@@ -70,7 +81,9 @@ def root_page():
         session['rated_items'] = rated_items
         session['item_ratings'] = item_ratings
     return render_template("index.html", closest_searches=closest_searches, \
-                           recommendations=recommendations, selection=selection)
+                           recommendations=recommendations, selection=selection,
+                           user_ratings= item_ratings,
+                           user_items=[id_to_name[item] for item in rated_items])
 
 
 #sudo lsof -t -i:5000

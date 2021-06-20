@@ -38,11 +38,12 @@ def get_data_info(X_df):
     return X_train, user_indices, item_indices
 
 def write_dictionary(X_df):
-    item_ids = list(X_df['item_index'].values)
-    item_names = list(X_df['beer_name'].values)
-    id_to_name = {id: name for id, name in zip(item_ids, item_names)}
-    name_to_id = {name: id for id, name in zip(item_ids, item_names)}
-    dicts = {"id_to_name": id_to_name, "name_to_id": name_to_id}
+    id_to_name = pd.Series(X_df.beer_name.values,index=X_df.item_index).to_dict()
+    name_to_id = pd.Series(X_df.item_index.values,index=X_df.beer_name).to_dict()
+    # Popularity: Number of 4 and 5 star ratings.
+    popularity = X_df.groupby('item_index').review_overall.apply(lambda x: len(x[x>3])).reset_index(name='counts')
+    id_to_pop = pd.Series(popularity.counts.values,index=popularity.item_index).to_dict()
+    dicts = {"id_to_name": id_to_name, "name_to_id": name_to_id, "id_to_pop":id_to_pop}
     with open("data/dicts.pickle", 'wb') as f:
         pickle.dump(dicts, f)
 
