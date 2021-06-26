@@ -50,7 +50,7 @@ def root_page():
                 if 'rec' + str(i) in request.form:
                     break
             selection = recommendations[i]
-        # Clicks a rating and submits
+        # Clicks a rating
         elif 'rating' in request.form:
             new_rating = int(request.form['rating'][0])
             if selection not in name_to_id:

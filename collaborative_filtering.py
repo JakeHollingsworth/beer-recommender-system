@@ -166,9 +166,6 @@ class New_User(torch.nn.Module):
         candidate_indices = top_N_indices[mask]
         similarities = self.get_similarities(candidate_indices)
         popularities = self.get_popularities(candidate_indices)
-        print("Scores :", scores, file=sys.stderr)
-        print("Sims :", similarities, file=sys.stderr)
-        print("Pops :", popularities, file=sys.stderr)
         ranking = model_weight * scores[mask] + sim_weight * similarities + \
                   pop_weight * popularities
         _, final_recs = torch.topk(ranking, N)
