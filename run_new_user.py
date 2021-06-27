@@ -1,4 +1,4 @@
-from fuzzywuzzy import process
+from fuzzywuzzy import process, fuzz
 from flask import Flask, render_template, request, session
 from utils import read_config
 import sqlalchemy
@@ -21,7 +21,7 @@ def init_session():
         session['item_ratings'] = []
 
 def get_closest_beers(query):
-    result = process.extract(query, names, limit=5)
+    result = process.extract(query, names, limit=5,scorer=fuzz.partial_ratio)
     # Process returns (value, score) tuples
     return [match[0] for match in result]
 
@@ -95,4 +95,4 @@ if __name__=='__main__':
     name_to_id = dicts['name_to_id']
     names = name_to_id.keys()
     user_ml_model = New_User(config['model_file'], config['learning_rate'], config['regularization_lambda'], config['epochs'])
-    app.run(debug=True)
+    app.run(host=config['host_ip'],debug=True)

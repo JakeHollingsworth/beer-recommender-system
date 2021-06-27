@@ -6,17 +6,6 @@ import pickle, sys
 
 from utils import *
 
-def similarity(x, X):
-    # Requires normalized x, X as input.
-    x_mat = torch.tile(x, (X.shape[0], 1))
-    return x_mat * X / (torch.norm(x) * torch.norm(X, axis=1))
-
-def find_item_neighborhood():
-    pass
-
-def find_dissimilar_items():
-    pass
-
 class Matrix_Factorization(torch.nn.Module):
     def __init__(self, X_train, user_indices, item_indices, n_latent, alpha, lmda, epochs):
         '''
@@ -183,15 +172,15 @@ if __name__ == '__main__':
     config = read_config()
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     full_df = pd.read_csv(config['data_path']+config['data_name'])
-    training_df, val_df, test_df = train_validation_test_split(full_df, [.7, .15])
+    training_df, val_df, test_df = train_validation_test_split(full_df, config['train_validation_test_split_ratio'])
     X_train, user_indices, item_indices = get_data_info(training_df)
     matrix_factor_model = Matrix_Factorization(X_train, user_indices, item_indices, \
                           config['latent_dims'], config['learning_rate'], \
                           config['regularization_lambda'], config['epochs'])
     matrix_factor_model.to(device)
-    #matrix_factor_model.fit_model()
-    #matrix_factor_model.save_model('torch_model.pickle')
-    matrix_factor_model.load_model('torch_model.pickle')
+#    matrix_factor_model.fit_model()
+#    matrix_factor_model.save_model(config['model_file'])
+    matrix_factor_model.load_model(config['model_file'])
     X_val, val_user_indices, val_item_indices = get_data_info(val_df)
     matrix_factor_model.test_model(X_val, val_user_indices, val_item_indices)
     '''
