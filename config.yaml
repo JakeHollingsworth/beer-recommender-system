@@ -24,4 +24,7 @@ latent_dims: 8
 
 model_file: "data/torch_model.pickle"
 
+
 optimize_file: "data/network_optimization.csv"
+
+dicts_file: "data/dicts.pickle"

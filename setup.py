@@ -76,6 +76,9 @@ def format_data(data_path,max_rows=-1):
         else:
             decodedDF[key.decode("utf-8").replace('/','_')] = dF[key]
 
+    decodedDF = decodedDF.groupby('beer_beerId').filter(lambda x: len(x) >= 5)
+    decodedDF = decodedDF[decodedDF['beer_name'].apply(lambda x : len(x) > 3)]
+    decodedDF = decodedDF.reset_index(drop=True)
 
     decodedDF['user_index'] = np.zeros((len(decodedDF),),dtype=np.int)
     decodedDF['item_index'] = np.zeros((len(decodedDF),),dtype=np.int)
@@ -108,8 +111,6 @@ def main():
     print('Formatting Data')
     dF = format_data(data_path = config_dict['data_path'])
     print('Saving Data as CSV')
-    print('Head Before Removing')
-    print(dF.head())
     write_data(dF=dF, data_path = config_dict['data_path'],data_name = config_dict['data_name'], dropped_keys=config_dict['dropped_keys'])
     if config_dict['remove_raw_data']:
         print('Removing Raw Data')
@@ -119,6 +120,4 @@ def main():
 
 if __name__ == '__main__':
     config_dict = read_config()
-
-    #main()
-    dF = pd.read_csv(config_dict['data_path'] + config_dict['data_name'])
+    main()
