@@ -68,7 +68,7 @@ def root_page():
                 else:
                     rated_items.append(int(name_to_id[selection]))
                     item_ratings.append(new_rating)
-                user_ml_model = update_model(rated_items, item_ratings)
+                update_model(rated_items, item_ratings)
                 recommendations = [id_to_name[i] for i in user_ml_model.get_top_N(10)]
         # Deletes history
         elif 'restart' in request.form:
