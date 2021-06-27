@@ -27,6 +27,7 @@ def optimize_model(epochs=200,n_latent_range=[5,50],lr_range=[0.00001,0.1],lmbda
     if not(os.path.isfile(config['optimize_file'])):
         with open(config['optimize_file'],'w') as f:
             f.write('lr,lmbda,n_latent,training_loss,validation_loss\n')
+    print("Running cross validation...")
 
     while True:
         lr = random_log_distribution(gen, low = lr_range[0], high = lr_range[1])
@@ -186,7 +187,7 @@ class New_User(torch.nn.Module):
         theta = self._user_theta.repeat(self._X.shape[0],1)
         predictions = torch.sum(theta * self._X, 1)
         # Predicted ratings
-        scores, top_N_indices = torch.topk(predictions, 5*N)
+        scores, top_N_indices = predictions, torch.arange(predictions.shape[0])
         mask = [0 if k.item() in self.user_rated_item_indices else 1 for k in top_N_indices]
         mask = torch.tensor(mask, dtype=torch.bool)
         candidate_indices = top_N_indices[mask]
@@ -206,7 +207,6 @@ class New_User(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    dF = pd.read_csv('data/network_optimization.csv',delimiter=',')
     config = read_config()
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     full_df = pd.read_csv(config['data_path']+config['data_name'])
