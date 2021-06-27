@@ -23,3 +23,5 @@ epochs: 200
 latent_dims: 8
 
 model_file: "data/torch_model.pickle"
+
+dicts_file: "data/dicts.pickle"
