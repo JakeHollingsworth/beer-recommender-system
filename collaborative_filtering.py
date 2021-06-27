@@ -3,8 +3,47 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 import pickle, sys
+import os
 
 from utils import *
+
+
+def optimize_model(epochs=200,n_latent_range=[5,50],lr_range=[0.00001,0.1],lmbda_range=[10**(-8),10**(-3)],seed=4):
+    def random_log_distribution(gen, low, high):
+        value = gen.uniform(low=np.log10(low),high=np.log10(high))
+        return 10**value
+
+    gen = np.random.default_rng(seed=seed)
+
+    # loading data and settings
+    config = read_config()
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    full_df = pd.read_csv(config['data_path']+config['data_name'])
+    training_df, val_df, test_df = train_validation_test_split(full_df, config['train_validation_test_split_ratio'])
+    X_train, user_indices, item_indices = get_data_info(training_df)
+    X_val, val_user_indices, val_item_indices = get_data_info(val_df)
+
+    #create file and header if it doesn't exist
+    if not(os.path.isfile(config['optimize_file'])):
+        with open(config['optimize_file'],'w') as f:
+            f.write('lr,lmbda,n_latent,training_loss,validation_loss\n')
+
+    while True:
+        lr = random_log_distribution(gen, low = lr_range[0], high = lr_range[1])
+        lmbda = random_log_distribution(gen, low = lmbda_range[0], high = lmbda_range[1])
+        n_latent = gen.integers(low = n_latent_range[0],high = n_latent_range[1])
+
+
+        matrix_factor_model = Matrix_Factorization(X_train, user_indices, item_indices, \
+                              n_latent, lr, \
+                              lmbda, epochs)
+        matrix_factor_model.to(device)
+        _ = matrix_factor_model.fit_model()
+        mean_training_error, mean_testing_error = matrix_factor_model.test_model(X_val, val_user_indices, val_item_indices)
+
+        with open(config['optimize_file'],'a') as f:
+            f.write(f'{lr},{lmbda},{n_latent},{mean_training_error},{mean_testing_error}\n')
+
 
 class Matrix_Factorization(torch.nn.Module):
     def __init__(self, X_train, user_indices, item_indices, n_latent, alpha, lmda, epochs):
@@ -50,8 +89,7 @@ class Matrix_Factorization(torch.nn.Module):
             loss.backward()
             self._optimizer.step()
         self.eval()
-        plt.plot(training_losses)
-        plt.show()
+
 
 
     def test_model(self, X_test, test_user_indices, test_item_indices):
@@ -68,8 +106,7 @@ class Matrix_Factorization(torch.nn.Module):
             print(test_predictions[i].item(), testing_set[i].item())
         mean_testing_error = self._criterion(test_predictions, testing_set).item()
 
-        print('Mean L2 training error : ', mean_training_error)
-        print('Mean L2 testing error  : ', mean_testing_error)
+        return mean_training_error, mean_testing_error
 
     def save_model(self, model_file):
         save_dict = {
@@ -169,6 +206,7 @@ class New_User(torch.nn.Module):
 
 
 if __name__ == '__main__':
+    dF = pd.read_csv('data/network_optimization.csv',delimiter=',')
     config = read_config()
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     full_df = pd.read_csv(config['data_path']+config['data_name'])
@@ -182,7 +220,11 @@ if __name__ == '__main__':
 #    matrix_factor_model.save_model(config['model_file'])
     matrix_factor_model.load_model(config['model_file'])
     X_val, val_user_indices, val_item_indices = get_data_info(val_df)
-    matrix_factor_model.test_model(X_val, val_user_indices, val_item_indices)
+    mean_training_error, mean_testing_error = matrix_factor_model.test_model(X_val, val_user_indices, val_item_indices)
+    print('Mean L2 training error : ', mean_training_error)
+    print('Mean L2 testing error  : ', mean_testing_error)
+
+
     '''
     user_ml_model = New_User(config['model_file'], config['learning_rate'], config['regularization_lambda'], config['epochs'])
     items = [10, 3000, 250, 760]
